@@ -3,11 +3,18 @@
 #include <sys/mman.h>
 #include <sys/stat.h>
 #include <sys/types.h>
+#include <fcntl.h>
 #include "h264decoder.h"
 
 
-h264decoder_ctx *h264decoder_create(vdp_context *vdp, int fd)
+h264decoder_ctx *h264decoder_create(vdp_context *vdp, const char *filename)
 {
+	int fd = open(filename, O_RDONLY);
+	if (fd == -1) {
+		fprintf(stderr, "Error while opening file\n");
+		return NULL;
+	}
+
 	h264decoder_ctx *ctx = (h264decoder_ctx *)malloc(sizeof(h264decoder_ctx));
 	ctx->vdp = vdp;
 	ctx->fd = fd;
@@ -37,6 +44,7 @@ void h264decoder_free(h264decoder_ctx *ctx)
 
 void h264decoder_init(h264decoder_ctx *ctx)
 {
+
 	ctx->width = *(int *)(ctx->p);
 	ctx->p += 4;
 	ctx->height = *(int *)(ctx->p);

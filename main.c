@@ -2,8 +2,6 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <vdpau/vdpau.h>
-#include <time.h>
-#include <unistd.h>
 #include "context.h"
 #include "h264decoder.h"
 
@@ -71,14 +69,11 @@ int main(int argc, char *argv[])
 		return -1;
 	}
 
-	int fd = open(argv[1], O_RDONLY);
-	if (fd == -1) {
-		fprintf(stderr, "Error while opening file\n");
+	h264decoder_ctx *decoder_ctx = h264decoder_create(context, argv[1]);
+	if (decoder_ctx == NULL) {
 		vdp_context_free(context);
 		return -1;
 	}
-
-	h264decoder_ctx *decoder_ctx = h264decoder_create(context, fd);
 	h264decoder_init(decoder_ctx);
 
 	for (int i = 0; i < 25; ++i) {

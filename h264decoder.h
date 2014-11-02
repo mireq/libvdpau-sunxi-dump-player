@@ -5,6 +5,11 @@
 #include <stdint.h>
 #include "context.h"
 
+#include <libavutil/imgutils.h>
+#include <libavutil/samplefmt.h>
+#include <libavutil/timestamp.h>
+#include <libavformat/avformat.h>
+
 #define FRAMESINSAMPLE 25
 
 typedef struct {
@@ -30,7 +35,7 @@ typedef struct {
 	uint8_t *data;
 } h264_frame;
 
-h264decoder_ctx *h264decoder_create(vdp_context *vdp, int fd);
+h264decoder_ctx *h264decoder_create(vdp_context *vdp, const char *filename);
 void h264decoder_free(h264decoder_ctx *ctx);
 void h264decoder_init(h264decoder_ctx *ctx);
 VdpVideoSurface h264decoder_get_next_frame(h264decoder_ctx *ctx);
