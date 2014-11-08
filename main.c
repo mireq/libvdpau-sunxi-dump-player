@@ -1,15 +1,22 @@
 #include <stdio.h>
 #include <sys/stat.h>
 #include <fcntl.h>
+#include <unistd.h>
 #include <vdpau/vdpau.h>
+
+#include <linux/fb.h>
+#include <sys/ioctl.h>
+
 #include "context.h"
 #include "h264decoder.h"
 
 #define SCREENWIDTH 800
 #define SCREENHEIGHT 480
 
-#define SURFACEWIDTH 1920
-#define SURFACEHEIGHT 1080
+#define SURFACEWIDTH 800
+#define SURFACEHEIGHT 480
+
+#define BLOCKSIZE 4096
 
 int main(int argc, char *argv[])
 {
@@ -18,6 +25,8 @@ int main(int argc, char *argv[])
 		printf("%s stream.h264\n", argv[0]);
 		return -1;
 	}
+
+	int fb = open("/dev/fb0", O_RDWR);
 
 	VdpOutputSurface display_surface;
 	VdpVideoMixer mixer;
@@ -76,8 +85,11 @@ int main(int argc, char *argv[])
 	}
 	h264decoder_init(decoder_ctx);
 
-	for (int i = 0; i < 25; ++i) {
+	for (;;) {
 		VdpVideoSurface surface = h264decoder_get_next_frame(decoder_ctx);
+		if (surface == VDP_INVALID_HANDLE) {
+			break;
+		}
 
 		VdpRect vid_source = { 0, 0, decoder_ctx->width, decoder_ctx->height };
 		VdpRect out_dest = { 0, 0, SCREENWIDTH, SCREENHEIGHT };
@@ -85,6 +97,13 @@ int main(int argc, char *argv[])
 		if (status != VDP_STATUS_OK) {
 			fprintf(stderr, "Error while video mixer render\n");
 		}
+
+		if (argc == 2) {
+			int arg = 0;
+			ioctl(fb, FBIO_WAITFORVSYNC, &arg);
+			ioctl(fb, FBIO_WAITFORVSYNC, &arg);
+		}
+
 		status = context->vdp_presentation_queue_display(queue, display_surface, 0, 0, 0);
 		if (status != VDP_STATUS_OK) {
 			fprintf(stderr, "Error while displaying\n");
