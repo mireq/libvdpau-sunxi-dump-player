@@ -23,7 +23,7 @@ typedef VdpStatus VdpPresentationQueueTargetCreateX11(
 VdpStatus vdp_imp_device_create_x11(Display *display, int screen, VdpDevice *device, VdpGetProcAddress **get_proc_address);
 
 #define VDP_FUNC_ID_PRESENTATION_QUEUE_TARGET_CREATE_X11 (VdpFuncId)(VDP_FUNC_ID_BASE_WINSYS + 0)
-#define NUMSURFACES 22
+#define NUMSURFACES 30
 
 typedef struct {
 	VdpDevice                                         vdp_device;
