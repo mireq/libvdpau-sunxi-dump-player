@@ -27,6 +27,12 @@ int main(int argc, char *argv[])
 	}
 
 	int fb = open("/dev/fb0", O_RDWR);
+	uint32_t fbdata[BLOCKSIZE / sizeof(uint32_t)];
+	for (size_t i = 0; i < BLOCKSIZE / sizeof(uint32_t); ++i) {
+		fbdata[i] = 0xff000102;
+	}
+	while (write(fb, &fbdata[0], BLOCKSIZE) > 0) {
+	}
 
 	VdpOutputSurface display_surface;
 	VdpVideoMixer mixer;
