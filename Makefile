@@ -7,7 +7,7 @@ MAKEFLAGS += -rR --no-print-directory
 
 DEP_CFLAGS = -MD -MP -MQ $@
 LIB_LDFLAGS = -Wl,-soname,$(TARGET) -Wl,--as-needed -L$(SYSROOT) -L$(SYSROOT)lib -L$(SYSROOT)usr -L$(SYSROOT)usr/lib
-LIBS = -lvdpau -lavcodec -lavutil
+LIBS = -lvdpau
 
 OBJ = $(addsuffix .o,$(basename $(SRC)))
 DEP = $(addsuffix .d,$(basename $(SRC)))
