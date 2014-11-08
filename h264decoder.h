@@ -5,13 +5,6 @@
 #include <stdint.h>
 #include "context.h"
 
-#include <libavutil/imgutils.h>
-#include <libavutil/samplefmt.h>
-#include <libavutil/timestamp.h>
-#include <libavformat/avformat.h>
-
-#define FRAMESINSAMPLE 25
-
 typedef struct {
 	vdp_context *vdp;
 	int fd;
@@ -22,11 +15,11 @@ typedef struct {
 	size_t bufsize;
 
 	uint32_t width, height;
-	double ratio;
+	uint32_t numframes;
 	VdpDecoder decoder;
 	VdpDecoderProfile profile;
 	VdpVideoSurface surfaces[NUMSURFACES];
-	int refframes[FRAMESINSAMPLE];
+	int *refframes;
 } h264decoder_ctx;
 
 typedef struct {

@@ -39,19 +39,26 @@ void h264decoder_free(h264decoder_ctx *ctx)
 	if (ctx->buf) {
 		munmap(ctx->buf, ctx->bufsize);
 	}
+	free(ctx->refframes);
 	free(ctx);
 }
 
 void h264decoder_init(h264decoder_ctx *ctx)
 {
 
-	ctx->width = *(int *)(ctx->p);
+	ctx->width = *(uint32_t *)(ctx->p);
 	ctx->p += 4;
-	ctx->height = *(int *)(ctx->p);
+	ctx->height = *(uint32_t *)(ctx->p);
 	ctx->p += 4;
-	ctx->ratio = *(int *)(ctx->p);
-	ctx->p += 8;
-	ctx->profile = *(int *)(ctx->p);
+	ctx->numframes = *(uint32_t *)(ctx->p);
+	ctx->p += 4;
+	if (ctx->numframes > 1000000) {
+		fprintf(stderr, "File too large");
+		return;
+	}
+	ctx->refframes = (int *)malloc(sizeof(int) * ctx->numframes);
+
+	ctx->profile = *(uint32_t *)(ctx->p);
 	ctx->p += 4;
 
 	VdpStatus status = ctx->vdp->vdp_decoder_create(ctx->vdp->vdp_device, ctx->profile, ctx->width, ctx->height, 16, &ctx->decoder);
@@ -71,23 +78,31 @@ void h264decoder_init(h264decoder_ctx *ctx)
 
 VdpVideoSurface h264decoder_get_next_frame(h264decoder_ctx *ctx)
 {
+	if (ctx->current_frame + 1 > ctx->numframes) {
+		return VDP_INVALID_HANDLE;
+	}
+
 	h264_frame frame;
+	uint32_t original_surface = *(uint32_t *)(ctx->p);
+	ctx->p += 4;
 	frame.info = *(VdpPictureInfoH264 *)(ctx->p);
 	VdpPictureInfoH264 info = frame.info;
+
 	ctx->p += sizeof(VdpPictureInfoH264);
-	frame.data_length = *(int *)(ctx->p);
+	frame.data_length = *(unsigned int *)(ctx->p);
 	ctx->p += 4;
 	frame.data = ctx->p;
 	ctx->p += frame.data_length;
 	ctx->current_frame++;
+
+	VdpVideoSurface current = ctx->surfaces[ctx->current_surface];
+	ctx->refframes[original_surface] = current;
 
 	for (int i = 0; i < 16; ++i) {
 		if (info.referenceFrames[i].surface != VDP_INVALID_HANDLE) {
 			info.referenceFrames[i].surface = ctx->refframes[info.referenceFrames[i].surface];
 		}
 	}
-
-	VdpVideoSurface current = ctx->surfaces[ctx->current_surface];
 
 	VdpBitstreamBuffer vbit;
 	vbit.struct_version = VDP_BITSTREAM_BUFFER_VERSION;
@@ -99,7 +114,6 @@ VdpVideoSurface h264decoder_get_next_frame(h264decoder_ctx *ctx)
 		fprintf(stderr, "Error while decoding frame\n");
 	}
 
-	ctx->refframes[ctx->current_frame-1] = current;
 	ctx->current_surface++;
 	if (ctx->current_surface >= NUMSURFACES) {
 		ctx->current_surface = 0;
