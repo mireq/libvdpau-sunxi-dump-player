@@ -24,7 +24,7 @@ h264decoder_ctx *h264decoder_create(vdp_context *vdp, const char *filename)
 	struct stat sb;
 	fstat(fd, &sb);
 	ctx->bufsize = sb.st_size;
-	ctx->buf = mmap(NULL, sb.st_size, PROT_READ, MAP_SHARED, fd, 0);
+	ctx->buf = (uint8_t*)mmap(NULL, sb.st_size, PROT_READ, MAP_SHARED, fd, 0);
 	if (ctx->buf == MAP_FAILED) {
 		fprintf(stderr, "mmap failed\n");
 		ctx->buf = NULL;
@@ -45,7 +45,6 @@ void h264decoder_free(h264decoder_ctx *ctx)
 
 void h264decoder_init(h264decoder_ctx *ctx)
 {
-
 	ctx->width = *(uint32_t *)(ctx->p);
 	ctx->p += 4;
 	ctx->height = *(uint32_t *)(ctx->p);
@@ -76,9 +75,16 @@ void h264decoder_init(h264decoder_ctx *ctx)
 	}
 }
 
+void h264decoder_rewind(h264decoder_ctx *ctx) {
+	ctx->current_frame = 0;
+	ctx->current_surface = 0;
+	ctx->p = ctx->buf;
+	ctx->p += 16;
+}
+
 VdpVideoSurface h264decoder_get_next_frame(h264decoder_ctx *ctx)
 {
-	if (ctx->current_frame + 1 > ctx->numframes) {
+	if ((uint32_t)ctx->current_frame + 1 > ctx->numframes) {
 		return VDP_INVALID_HANDLE;
 	}
 

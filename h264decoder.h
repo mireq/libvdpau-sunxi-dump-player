@@ -3,6 +3,7 @@
 
 #include <vdpau/vdpau.h>
 #include <stdint.h>
+#include <stdlib.h>
 #include "context.h"
 
 typedef struct {
@@ -31,6 +32,7 @@ typedef struct {
 h264decoder_ctx *h264decoder_create(vdp_context *vdp, const char *filename);
 void h264decoder_free(h264decoder_ctx *ctx);
 void h264decoder_init(h264decoder_ctx *ctx);
+void h264decoder_rewind(h264decoder_ctx *ctx);
 VdpVideoSurface h264decoder_get_next_frame(h264decoder_ctx *ctx);
 
 #endif /* end of include guard: H264DECODER_H_ZCW945MJ */

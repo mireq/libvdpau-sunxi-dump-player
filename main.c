@@ -47,10 +47,14 @@ int main(int argc, char *argv[])
 
 	int c;
 	int benchmark = 0;
-	while ((c = getopt(argc - 1, argv + 1, "b")) != -1) {
+	int cycle = 0;
+	while ((c = getopt(argc - 1, argv + 1, "bc")) != -1) {
 		switch (c) {
 			case 'b':
 				benchmark = 1;
+				break;
+			case 'c':
+				cycle = 1;
 				break;
 		}
 	}
@@ -124,7 +128,13 @@ int main(int argc, char *argv[])
 	for (;;) {
 		VdpVideoSurface surface = h264decoder_get_next_frame(decoder_ctx);
 		if (surface == VDP_INVALID_HANDLE) {
-			break;
+			if (cycle) {
+				h264decoder_rewind(decoder_ctx);
+				continue;
+			}
+			else {
+				break;
+			}
 		}
 
 		VdpRect vid_source = { 0, 0, decoder_ctx->width, decoder_ctx->height };
