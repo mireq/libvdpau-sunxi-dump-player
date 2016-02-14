@@ -1,3 +1,4 @@
+#include <signal.h>
 #include <stdio.h>
 #include <sys/stat.h>
 #include <fcntl.h>
@@ -17,6 +18,23 @@
 #define SURFACEHEIGHT 480
 
 #define BLOCKSIZE 4096
+
+
+vdp_context *context = NULL;
+h264decoder_ctx *decoder_ctx = NULL;
+
+
+void clean(int signum) {
+	if (signum == SIGINT) {
+		if (decoder_ctx != NULL) {
+			h264decoder_free(decoder_ctx);
+		}
+		if (context != NULL) {
+			vdp_context_free(context);
+		}
+	}
+}
+
 
 int main(int argc, char *argv[])
 {
@@ -39,7 +57,7 @@ int main(int argc, char *argv[])
 	VdpPresentationQueueTarget queue_target;
 	VdpPresentationQueue queue;
 
-	vdp_context *context = vdp_context_create();
+	context = vdp_context_create();
 	if (vdp_context_initialize(context) != VDP_STATUS_OK) {
 		vdp_context_free(context);
 		fprintf(stderr, "Context not initialized\n");
@@ -84,7 +102,7 @@ int main(int argc, char *argv[])
 		return -1;
 	}
 
-	h264decoder_ctx *decoder_ctx = h264decoder_create(context, argv[1]);
+	decoder_ctx = h264decoder_create(context, argv[1]);
 	if (decoder_ctx == NULL) {
 		vdp_context_free(context);
 		return -1;
