@@ -1,7 +1,8 @@
+#include <fcntl.h>
+#include <getopt.h>
 #include <signal.h>
 #include <stdio.h>
 #include <sys/stat.h>
-#include <fcntl.h>
 #include <unistd.h>
 #include <vdpau/vdpau.h>
 
@@ -43,6 +44,17 @@ int main(int argc, char *argv[])
 		printf("%s stream.h264\n", argv[0]);
 		return -1;
 	}
+
+	int c;
+	int benchmark = 0;
+	while ((c = getopt(argc - 1, argv + 1, "b")) != -1) {
+		switch (c) {
+			case 'b':
+				benchmark = 1;
+				break;
+		}
+	}
+
 
 	int fb = open("/dev/fb0", O_RDWR);
 	uint32_t fbdata[BLOCKSIZE / sizeof(uint32_t)];
@@ -122,7 +134,7 @@ int main(int argc, char *argv[])
 			fprintf(stderr, "Error while video mixer render\n");
 		}
 
-		if (argc == 2) {
+		if (!benchmark) {
 			int arg = 0;
 			ioctl(fb, FBIO_WAITFORVSYNC, &arg);
 			ioctl(fb, FBIO_WAITFORVSYNC, &arg);
