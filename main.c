@@ -29,21 +29,12 @@ int force_stop = 0;
 
 
 void clean(int signum) {
-	force_stop = 1;
-	struct timespec reqtime;
-	reqtime.tv_sec = 0;
-	reqtime.tv_nsec = 500000000;
-	nanosleep(&reqtime, NULL);
-
 	if (signum == SIGINT || signum == SIGTERM) {
-		if (decoder_ctx != NULL) {
-			h264decoder_free(decoder_ctx);
-			decoder_ctx = NULL;
-		}
-		if (context != NULL) {
-			vdp_context_free(context);
-			context = NULL;
-		}
+		force_stop = 1;
+		struct timespec reqtime;
+		reqtime.tv_sec = 0;
+		reqtime.tv_nsec = 100000000;
+		nanosleep(&reqtime, NULL);
 	}
 }
 
