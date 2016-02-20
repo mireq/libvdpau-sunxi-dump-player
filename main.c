@@ -1,9 +1,11 @@
+#define _XOPEN_SOURCE 70
 #include <fcntl.h>
 #include <getopt.h>
 #include <signal.h>
 #include <stdio.h>
-#include <sys/stat.h>
+#include <time.h>
 #include <unistd.h>
+#include <sys/stat.h>
 #include <vdpau/vdpau.h>
 
 #include <linux/fb.h>
@@ -23,15 +25,24 @@
 
 vdp_context *context = NULL;
 h264decoder_ctx *decoder_ctx = NULL;
+int force_stop = 0;
 
 
 void clean(int signum) {
-	if (signum == SIGINT) {
+	force_stop = 1;
+	struct timespec reqtime;
+	reqtime.tv_sec = 0;
+	reqtime.tv_nsec = 500000000;
+	nanosleep(&reqtime, NULL);
+
+	if (signum == SIGINT || signum == SIGTERM) {
 		if (decoder_ctx != NULL) {
 			h264decoder_free(decoder_ctx);
+			decoder_ctx = NULL;
 		}
 		if (context != NULL) {
 			vdp_context_free(context);
+			context = NULL;
 		}
 	}
 }
@@ -44,6 +55,9 @@ int main(int argc, char *argv[])
 		printf("%s stream.h264\n", argv[0]);
 		return -1;
 	}
+
+	signal(SIGINT, clean);
+	signal(SIGTERM, clean);
 
 	int c;
 	int benchmark = 0;
@@ -126,6 +140,9 @@ int main(int argc, char *argv[])
 	h264decoder_init(decoder_ctx);
 
 	for (;;) {
+		if (force_stop) {
+			break;
+		}
 		VdpVideoSurface surface = h264decoder_get_next_frame(decoder_ctx);
 		if (surface == VDP_INVALID_HANDLE) {
 			if (cycle) {
@@ -156,7 +173,13 @@ int main(int argc, char *argv[])
 		}
 	}
 
-	h264decoder_free(decoder_ctx);
-	vdp_context_free(context);
+	if (decoder_ctx != NULL) {
+		h264decoder_free(decoder_ctx);
+		decoder_ctx = NULL;
+	}
+	if (context != NULL) {
+		vdp_context_free(context);
+		context = NULL;
+	}
 	return 0;
 }

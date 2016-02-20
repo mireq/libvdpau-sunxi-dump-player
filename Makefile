@@ -1,7 +1,7 @@
 TARGET = h264player
 
 SRC = main.c context.c h264decoder.c
-CFLAGS = -Wall -O3 -std=c11 --sysroot=$(SYSROOT) -I$(SYSROOT)usr/include
+CFLAGS = -Wall -O3 -std=c11 -D_POSIX_C_SOURCE=199309L --sysroot=$(SYSROOT) -I$(SYSROOT)usr/include
 
 MAKEFLAGS += -rR --no-print-directory
 
