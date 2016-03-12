@@ -80,7 +80,6 @@ int main(int argc, char *argv[])
 
 	context = vdp_context_create();
 	if (vdp_context_initialize(context) != VDP_STATUS_OK) {
-		vdp_context_free(context);
 		fprintf(stderr, "Context not initialized\n");
 		return -1;
 	}
@@ -169,6 +168,10 @@ int main(int argc, char *argv[])
 		decoder_ctx = NULL;
 	}
 	if (context != NULL) {
+		context->vdp_presentation_queue_destroy(queue_target);
+		context->vdp_presentation_queue_target_destroy(queue_target);
+		context->vdp_video_mixer_destroy(mixer);
+		context->vdp_output_surface_destroy(display_surface);
 		vdp_context_free(context);
 		context = NULL;
 	}
